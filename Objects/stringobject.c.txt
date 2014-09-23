@@ -1025,22 +1025,16 @@ string_length(PyStringObject *a)
     return Py_SIZE(a);
 }
 
-/*
-字符串连接操作函数
-*/
 static PyObject *
 string_concat(register PyStringObject *a, register PyObject *bb)
 {
     register Py_ssize_t size;
     register PyStringObject *op;
-	/*检查PyObject对象bb的格式是否是PyStringObject对象*/
     if (!PyString_Check(bb)) {
 #ifdef Py_USING_UNICODE
-		/*调用unicode类型的连接函数*/
         if (PyUnicode_Check(bb))
             return PyUnicode_Concat((PyObject *)a, bb);
 #endif
-		/*调用字节类型的连接函数*/
         if (PyByteArray_Check(bb))
             return PyByteArray_Concat((PyObject *)a, bb);
         PyErr_Format(PyExc_TypeError,
@@ -1059,7 +1053,6 @@ string_concat(register PyStringObject *a, register PyObject *bb)
         Py_INCREF(a);
         return (PyObject *)a;
     }
-	/*计算字符串链接后的长度*/
     size = Py_SIZE(a) + Py_SIZE(b);
     /* Check that string sizes are not negative, to prevent an
        overflow in cases where we are passed incorrectly-created
@@ -1078,14 +1071,12 @@ string_concat(register PyStringObject *a, register PyObject *bb)
                         "strings are too large to concat");
         return NULL;
     }
-	/*创建新的PyStringObject对象,其内存长度为size*/
     op = (PyStringObject *)PyObject_MALLOC(PyStringObject_SIZE + size);
     if (op == NULL)
         return PyErr_NoMemory();
     PyObject_INIT_VAR(op, &PyString_Type, size);
     op->ob_shash = -1;
     op->ob_sstate = SSTATE_NOT_INTERNED;
-	/*将a和b中的字符拷贝到新建的PyStringObject对象中*/
     Py_MEMCPY(op->ob_sval, a->ob_sval, Py_SIZE(a));
     Py_MEMCPY(op->ob_sval + Py_SIZE(a), b->ob_sval, Py_SIZE(b));
     op->ob_sval[size] = '\0';
@@ -1615,7 +1606,6 @@ static PyObject *
 string_join(PyStringObject *self, PyObject *orig)
 {
     char *sep = PyString_AS_STRING(self);
-	/*原有PyStringObject对象的长度*/
     const Py_ssize_t seplen = PyString_GET_SIZE(self);
     PyObject *res = NULL;
     char *p;
@@ -1629,7 +1619,6 @@ string_join(PyStringObject *self, PyObject *orig)
         return NULL;
     }
 
-	/*获取待join的字串的长度*/
     seqlen = PySequence_Size(seq);
     if (seqlen == 0) {
         Py_DECREF(seq);
@@ -1650,14 +1639,11 @@ string_join(PyStringObject *self, PyObject *orig)
      * need (sz), see whether any argument is absurd, and defer to
      * the Unicode join if appropriate.
      */
-	/*遍历待join字串的元素,累加获得连接list中所有字符串后的长度*/
     for (i = 0; i < seqlen; i++) {
         const size_t old_sz = sz;
-		/*获取第i个元素*/
         item = PySequence_Fast_GET_ITEM(seq, i);
         if (!PyString_Check(item)){
 #ifdef Py_USING_UNICODE
-			/*使用unicode对象的join函数*/
             if (PyUnicode_Check(item)) {
                 /* Defer to Unicode join.
                  * CAUTION:  There's no gurantee that the
@@ -1677,7 +1663,6 @@ string_join(PyStringObject *self, PyObject *orig)
             Py_DECREF(seq);
             return NULL;
         }
-		/*sz为连接后字串的长度*/
         sz += PyString_GET_SIZE(item);
         if (i != 0)
             sz += seplen;
@@ -1690,7 +1675,6 @@ string_join(PyStringObject *self, PyObject *orig)
     }
 
     /* Allocate result space. */
-	/*创建长度为sz的PyStringObject的对象*/
     res = PyString_FromStringAndSize((char*)NULL, sz);
     if (res == NULL) {
         Py_DECREF(seq);
@@ -1698,7 +1682,6 @@ string_join(PyStringObject *self, PyObject *orig)
     }
 
     /* Catenate everything. */
-	/*将元素拷贝到新申请的PyStringObject对象中*/
     p = PyString_AS_STRING(res);
     for (i = 0; i < seqlen; ++i) {
         size_t n;
